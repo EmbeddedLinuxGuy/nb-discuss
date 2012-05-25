@@ -43,7 +43,7 @@ def get_messages(mb):
         mb_msg.id = msg['message-id']
         mb_msg.in_reply_to_id = msg['in-reply-to']
         mb_msg.subject = msg['subject']
-        mb_msg.sent_date = msg['sent-date']
+        mb_msg.sent_date = msg['date']
         mb_msg.received_date = msg['x-list-received-date']
         mb_msg.body = get_plain_body(msg)
 
