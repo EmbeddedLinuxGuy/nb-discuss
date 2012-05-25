@@ -9,7 +9,6 @@ import re
 class MBMessage(object):
 
     def __init__(self):
-        self.to_value = []
         self.from_value = None
         self.message_id = None
         self.in_reply_to_id = None
@@ -26,12 +25,11 @@ def read_mbox(mbox_path):
 
     return mbox(mbox_path)
 
-def get_plaintext_messages(mb):
+def get_messages(mb):
 
     email_expr = re.compile('([\w\-\.+]+@(\w[\w\-]+\.)+[\w\-]+)') #parses out email addresses
 
-
-    all_pt_msgs = []
+    all_msgs = []
     for msg in mb:
 
         mb_msg = MBMessage()
@@ -41,23 +39,30 @@ def get_plaintext_messages(mb):
         if m is not None:
             mb_msg.from_value = m.group(0)
 
+        #get message id
+        mb_msg.id = msg['message-id']
+        mb_msg.in_reply_to_id = msg['in-reply-to']
+        mb_msg.subject = msg['subject']
+        mb_msg.sent_date = msg['sent-date']
+        mb_msg.received_date = msg['x-list-received-date']
+        mb_msg.body = get_plain_body(msg)
+
+        if mb_msg.body is not None:
+            all_msgs.append(mb_msg)
+
+    return all_msgs
+
+def get_plain_body(msg):
+    if msg.is_multipart():
+        for sub_msg in msg.get_payload():
+            mb = get_plain_body(sub_msg)
+            if mb is not None:
+                return mb
+
+    if msg.get_content_type() == 'text/plain':
+        return msg.get_payload()
 
 
-
-        pt_msg = None
-
-        if msg.is_multipart():
-            for sub_msg in msg.get_payload():
-                if sub_msg.get_content_type() == 'text/plain':
-                    pt_msg = sub_msg
-        else:
-            if msg.get_content_type() == 'text/plain':
-                pt_msg = msg
-
-        if pt_msg is not None:
-            all_pt_msgs.append(pt_msg)
-
-    return all_pt_msgs
 
 def create_database(mb):
 
